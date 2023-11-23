@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require("cors");
 const bodyParser = require('body-parser')
-const paymentRoutes = require('./routes/paymentRoutes')
+// const paymentRoutes = require('./routes/paymentRoutes')
 const authRoutes = require('./routes/authRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes')
 const clientRoutes = require('./routes/clientRoutes')
@@ -31,7 +31,7 @@ app.use('/auth', passwordResetController);
 app.use('/api', dashboardRoutes);
 app.use('/api', clientRoutes);
 app.use('/api', productRoutes);
-app.use('/payments', paymentRoutes);
+// app.use('/payments', paymentRoutes);
 
 
 app.listen(PORT, () => {

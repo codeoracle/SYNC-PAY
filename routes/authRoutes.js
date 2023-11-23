@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const CryptoJS = require("crypto");
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
@@ -19,7 +19,7 @@ router.post('/register', async (req, res) => {
 
     // Hash password
 
-    const hashedPassword = await CryptoJS.AES.encrypt( req.body.password, process.env.PASS_SEC).toString();
+      const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create a new user
     const newUser = new User({ businessName, email, password: hashedPassword });
@@ -48,22 +48,19 @@ router.post('/login', async (req, res) => {
 
     // Verify password
 
-    const passwordMatch = await CryptoJS.AES.decrypt( user.password, process.env.PASS_SEC);
+    const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const originalPassword = passwordMatch.toString(CryptoJS.enc.Utf8);
-
-    if (originalPassword != password) {
-    return res.status(401).json({ message: 'Wrong Password' });
-  }
     // Generate JWT token
     
-    const token = jwt.sign({ email: user.email, role: user.role }, process.env.JWT_SECRET);
+    const token = jwt.sign({ email: user.email, role: user.role }, process.env.JWT_SECRET, {expiresIn: "3d"});
+
+    // const { password, ...others} = user._doc
 
 
-    res.status(200).json({ token });
+    res.status(200).json({ user, token });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal Server Error' });

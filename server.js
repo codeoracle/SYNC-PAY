@@ -9,14 +9,25 @@ const dashboardRoutes = require('./routes/dashboardRoutes')
 const clientRoutes = require('./routes/clientRoutes')
 const productRoutes = require('./routes/productRoutes')
 const passwordResetController = require('./controllers/passwordResetController');
+const cookieParser = require('cookie-parser')
+const app = express();
 
+
+
+const PORT = process.env.PORT || 3000;
 
 dotenv.config();
-const PORT = process.env.PORT || 3000;
-const app = express();
+app.use(cookieParser())
 app.use(cors());
 app.use(bodyParser.json())
 app.use(express.json());
+app.use(express.urlencoded({extended: false}))
+app.use((req, res, next)=>{
+   res.setHeader('Access-Control-Allow-Originn', '*');
+   res.setHeader('Access-Control-Allow-Method', 'OPTIONS, POST, PUT, GET, DELETE, PATCH');
+   res.setHeader('Access-Control-Allow-Header', 'Content-Type, Authorization');
+   next();
+})
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {

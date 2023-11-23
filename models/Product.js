@@ -14,7 +14,9 @@ const productSchema = new mongoose.Schema({
     enum: ['paid', 'unpaid'],
     default: 'unpaid',
   },
-});
+},
+{timestamps: true}
+);
 
 const Product = mongoose.model('Product', productSchema);
 

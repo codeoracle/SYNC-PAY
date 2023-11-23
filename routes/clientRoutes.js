@@ -3,7 +3,7 @@ const router = express.Router();
 const Client = require('../models/Client');
 
 // Create a new client profile
-router.post('/clients', async (req, res) => {
+router.post('/new/client', async (req, res) => {
   try {
     const {
       firstName,

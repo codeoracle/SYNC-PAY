@@ -26,6 +26,7 @@
     "punycode": "^2.3.1"
   },
   "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
     "@types/uuid": "^9.0.7",
     "uuid": "^9.0.1"
   }

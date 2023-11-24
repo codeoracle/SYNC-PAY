@@ -3,18 +3,18 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require("cors");
 const bodyParser = require('body-parser')
+const cookieParser = require('cookie-parser')
 const paymentRoutes = require('./routes/paymentRoutes')
 const authRoutes = require('./routes/authRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes')
 const clientRoutes = require('./routes/clientRoutes')
 const productRoutes = require('./routes/productRoutes')
+const invoiceRoutes = require('./routes/invoiceRoutes')
 const passwordResetController = require('./controllers/passwordResetController');
-const cookieParser = require('cookie-parser')
 
 
-
-const PORT = process.env.PORT || 3000;
 dotenv.config();
+const PORT = process.env.PORT || 4000;
 const app = express();
 app.use(cookieParser())
 app.use(cors());
@@ -41,7 +41,9 @@ app.use('/auth', passwordResetController);
 app.use('/api', dashboardRoutes);
 app.use('/api', clientRoutes);
 app.use('/api', productRoutes);
+app.use('/api', invoiceRoutes);
 app.use('/payments', paymentRoutes);
+
 
 
 app.listen(PORT, () => {

@@ -11,12 +11,19 @@ const productSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['paid', 'unpaid'],
+    enum: ['unpaid', 'paid'],
     default: 'unpaid',
   },
-},
-{timestamps: true}
-);
+  businessOwnerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'BusinessOwner',
+    required: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
 const Product = mongoose.model('Product', productSchema);
 

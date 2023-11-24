@@ -29,9 +29,7 @@ const invoiceSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-},
-{timestamps: true}
-);
+});
 
 const Invoice = mongoose.model('Invoice', invoiceSchema);
 

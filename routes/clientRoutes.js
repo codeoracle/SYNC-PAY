@@ -1,40 +1,50 @@
 const express = require('express');
 const router = express.Router();
 const Client = require('../models/Client');
+const { authenticateToken } = require('../middleware/authMiddleware');
 
-// Create a new client profile
-router.post('/new/client', async (req, res) => {
+// Apply authentication middleware to the client route
+router.get('/clients', authenticateToken, async (req, res) => {
   try {
-    const {
-      firstName,
-      lastName,
-      email,
-      phoneNumber,
-      country,
-      address,
-      password,
-    } = req.body;
+    // Get the business owner's ID from the decoded token
+    const businessOwnerId = req.user.businessOwnerId;
 
-    // Check if the client with the same email already exists
-    const existingClient = await Client.findOne({ email });
+    // Verify ownership by matching businessOwnerId with the decoded token
+    const clients = await Client.find({ businessOwnerId });
 
-    if (existingClient) {
-      return res.status(409).json({ message: 'Client with this email already exists' });
-    }
+    res.status(200).json({
+      message: 'Clients retrieved successfully',
+      clients,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
 
+// Include the previous POST response for creating a new client
+router.post('/new/client', authenticateToken, async (req, res) => {
+  try {
+    // Get the business owner's ID from the decoded token
+    const businessOwnerId = req.user.businessOwnerId;
+
+    // Securely create a new client by verifying ownership and validating input
     const newClient = new Client({
-      firstName,
-      lastName,
-      email,
-      phoneNumber,
-      country,
-      address,
-      password,
+      businessOwnerId,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      email: req.body.email,
+      phoneNumber: req.body.phoneNumber,
+      country: req.body.country,
+      address: req.body.address,
     });
 
     const savedClient = await newClient.save();
-    res.status(201).json(savedClient);
 
+    res.status(201).json({
+      message: 'Client created successfully',
+      client: savedClient,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal Server Error' });

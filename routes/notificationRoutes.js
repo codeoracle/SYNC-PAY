@@ -1,16 +1,19 @@
 const express = require('express');
 const router = express.Router();
 
-router.post('/send-notification', (req, res) => {
-  const io = req.io;
+// Simple route to emit a notification
+router.post('/notify', (req, res) => {
+  try {
+    const { message } = req.body;
 
-  // Extract data from the request body or parameters if needed
-  const { message } = req.body;
+    // Emit the notification to all connected clients
+    req.io.emit('notification', { message });
 
-  // Emit a notification to all connected clients
-  io.emit('notification', { message });
-
-  res.status(200).json({ success: true, message: 'Notification sent' });
+    res.status(200).json({ message: 'Notification sent successfully', success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error', success: false });
+  }
 });
 
 module.exports = router;

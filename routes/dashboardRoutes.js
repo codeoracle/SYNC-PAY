@@ -1,31 +1,30 @@
 const express = require('express');
 const router = express.Router();
+const Invoice = require('../models/Invoice');
+const Client = require('../models/Client');
 const { authenticateToken, authorizeRole } = require('../middleware/authMiddleware');
 
+// Dashboard route for business owner
+router.get('/dashboard', authenticateToken, authorizeRole('businessOwner'), async (req, res) => {
+  try {
+    // Get business owner's ID from the decoded token
+    const businessOwnerId = req.user._id; // Assuming the business owner's ID is stored in req.user._id
 
-
-// Protected route example
-router.get('/dashboard', authenticateToken, authorizeRole('Business Owner'), async (req, res) => {
- try {
-    // Get total balance
-    const totalBalance = await Payment.aggregate([
-      {
-        $match: { status: 'paid' },
-      },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: '$amount' },
-        },
-      },
+    // Fetch necessary data for the dashboard
+    const totalAmount = await Invoice.aggregate([
+      { $match: { businessOwnerId } },
+      { $group: { _id: null, total: { $sum: '$amount' } } },
     ]);
 
-    // Get total number of clients
-    const totalClients = await Client.countDocuments();
+    const numberOfClients = await Client.countDocuments({ businessOwnerId });
 
+    const totalInvoices = await Invoice.countDocuments({ businessOwnerId });
+
+    // Return the dashboard information
     res.status(200).json({
-      totalBalance: totalBalance.length > 0 ? totalBalance[0].total : 0,
-      totalClients,
+      totalAmount: totalAmount.length > 0 ? totalAmount[0].total : 0,
+      numberOfClients,
+      totalInvoices,
     });
   } catch (error) {
     console.error(error);

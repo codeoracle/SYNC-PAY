@@ -1,18 +1,30 @@
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+const Client = require('../models/Client');
 
-function authenticateToken(req, res, next) {
+async function authenticateToken(req, res, next) {
   const authHeader = req.header('Authorization');
 
   if (authHeader) {
+    // const token = authHeader;
     const token = authHeader.split(' ')[1];
-    console.log('Received Token:', token);
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    jwt.verify(token, process.env.JWT_SECRET, async (err, user) => {
       if (err) {
-        console.error('JWT Verification Error:', err);
         return res.status(403).json({ message: 'Forbidden - Invalid token' });
       }
 
-      req.user = user;
+      // Check user role and set it in req.user
+      switch (user.role) {
+        case 'businessOwner':
+          req.user = await User.findOne({ email: user.email });
+          break;
+        case 'client':
+          req.user = await Client.findOne({ email: user.email });
+          break;
+        default:
+          return res.status(403).json({ message: 'Forbidden - Unknown role' });
+      }
+
       next();
     });
   } else {
@@ -22,7 +34,7 @@ function authenticateToken(req, res, next) {
 
 function authorizeRole(role) {
   return (req, res, next) => {
-    if (req.user && req.user.role === businessOwner) {
+    if (req.user && req.user.role === role) {
       next();
     } else {
       return res.status(403).json({ message: 'Forbidden - Insufficient permissions' });

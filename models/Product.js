@@ -1,6 +1,12 @@
 const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
+
+    businessOwnerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
   productName: {
     type: String,
     required: true,
@@ -13,11 +19,6 @@ const productSchema = new mongoose.Schema({
     type: String,
     enum: ['unpaid', 'paid'],
     default: 'unpaid',
-  },
-  businessOwnerId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'BusinessOwner',
-    required: true,
   },
   createdAt: {
     type: Date,

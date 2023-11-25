@@ -1,15 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const Client = require('../models/Client');
-const { authenticateToken } = require('../middleware/authMiddleware');
+const Product = require('../models/Product');
+const { authenticateToken, authorizeRole } = require('../middleware/authMiddleware');
 
-// Apply authentication middleware to the client route
-router.get('/clients', authenticateToken, async (req, res) => {
+
+// Error handling middleware
+function errorHandler(err, req, res, next) {
+  console.error(err);
+  res.status(500).json({ message: 'Internal Server Error' });
+}
+
+// Get all clients
+router.get('/clients', authenticateToken, authorizeRole('businessOwner'), async (req, res) => {
   try {
-    // Get the business owner's ID from the decoded token
-    const businessOwnerId = req.user.businessOwnerId;
+    const businessOwnerId = req.user._id;
 
-    // Verify ownership by matching businessOwnerId with the decoded token
     const clients = await Client.find({ businessOwnerId });
 
     res.status(200).json({
@@ -22,33 +28,65 @@ router.get('/clients', authenticateToken, async (req, res) => {
   }
 });
 
-// Include the previous POST response for creating a new client
-router.post('/new/client', authenticateToken, async (req, res) => {
+// Get client details
+router.get('/clients/:clientId', authenticateToken, authorizeRole('businessOwner'), async (req, res) => {
   try {
-    // Get the business owner's ID from the decoded token
-    const businessOwnerId = req.user.businessOwnerId;
+    const { clientId } = req.params;
+    const businessOwnerId = req.user._id;
 
-    // Securely create a new client by verifying ownership and validating input
-    const newClient = new Client({
-      businessOwnerId,
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
-      email: req.body.email,
-      phoneNumber: req.body.phoneNumber,
-      country: req.body.country,
-      address: req.body.address,
-    });
+    const client = await Client.findOne({ _id: clientId, businessOwnerId });
 
-    const savedClient = await newClient.save();
+    if (!client) {
+      return res.status(404).json({ message: 'Client not found' });
+    }
 
-    res.status(201).json({
-      message: 'Client created successfully',
-      client: savedClient,
+    res.status(200).json({
+      message: 'Client details retrieved successfully',
+      client,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
+
+// Get all products for the client
+router.get('/client/products', authenticateToken, async (req, res) => {
+  try {
+    const products = await Product.find();
+
+    res.status(200).json({
+      message: 'Products retrieved successfully',
+      products,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+// Get product details for the client
+router.get('/client/products/:productId', authenticateToken, async (req, res) => {
+  try {
+    const { productId } = req.params;
+
+    const product = await Product.findOne({ _id: productId });
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    res.status(200).json({
+      message: 'Product details retrieved successfully',
+      product,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+// Use the error handling middleware
+router.use(errorHandler);
 
 module.exports = router;

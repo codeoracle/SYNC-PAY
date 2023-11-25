@@ -1,30 +1,11 @@
 const mongoose = require('mongoose');
 
 const invoiceSchema = new mongoose.Schema({
-  clientId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Client',
-    required: true,
-  },
-  invoiceId: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  amount: {
-    type: Number,
-    required: true,
-  },
-  isPaid: {
-    type: Boolean,
-    default: false,
-  },
-  payments: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Payment',
-    },
-  ],
+  
+  clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Client', required: true },
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: false },
+  amount: { type: Number, required: false },
+  isPaid: { type: Boolean, default: false },
   createdAt: {
     type: Date,
     default: Date.now,

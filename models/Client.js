@@ -3,8 +3,8 @@ const mongoose = require('mongoose');
 const clientSchema = new mongoose.Schema({
   businessOwnerId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'BusinessOwner',
-    required: true,
+    ref: 'User',
+    required: false,
   },
   firstName: {
     type: String,
@@ -33,7 +33,12 @@ const clientSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    // required: true,
+    required: false,
+  },
+  role: {
+    type: String,
+    enum: ['businessOwner', 'client'],
+    default: 'client',
   },
   createdAt: {
     type: Date,

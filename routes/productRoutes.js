@@ -1,66 +1,95 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
-const Product = require('../models/Product');
-const BusinessOwner = require('../models/BusinessOwner');
-const Client = require('../models/Client');
-const { authenticateToken } = require('../middleware/authMiddleware');
-
 const router = express.Router();
+const uuid = require('uuid');
+const Product = require('../models/Product');
+const Invoice = require('../models/Invoice');
+const { authenticateToken, authorizeRole } = require('../middleware/authMiddleware');
 
 // Create a new product
-router.post('/new/product', authenticateToken, async (req, res) => {
+router.post('/create-product', authenticateToken, authorizeRole('businessOwner'), async (req, res) => {
   try {
-    const { productName, price, status } = req.body;
-    const { email, role } = req.user;
-
-    // Check if the user is a business owner
-    if (role !== 'businessOwner') {
-      return res.status(403).json({ message: 'Only business owners can create products' });
-    }
-
-    // Find the business owner
-    const businessOwner = await BusinessOwner.findOne({ email });
-    if (!businessOwner) {
-      return res.status(404).json({ message: 'Business owner not found' });
-    }
+    const { productName, price, clientId } = req.body;
 
     // Create a new product
     const newProduct = new Product({
+      businessOwnerId: req.user._id, // Use req.user._id directly
       productName,
       price,
-      status,
-      businessOwnerId: businessOwner._id,
     });
 
     const savedProduct = await newProduct.save();
-    res.status(201).json(savedProduct);
+
+    // Generate a unique invoice ID
+    const invoiceId = uuid.v4();
+
+    // Create a new invoice
+    const newInvoice = new Invoice({
+      clientId,
+      businessOwnerId: req.user._id, // Use req.user._id directly
+      invoiceId,
+      products: [savedProduct._id],
+    });
+
+    const savedInvoice = await newInvoice.save();
+
+    res.status(201).json({ message: 'Product and invoice created successfully', product: savedProduct, invoice: savedInvoice, success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error', success: false });
+  }
+});
+
+// Get all products
+router.get('/products', authenticateToken, authorizeRole('businessOwner'), async (req, res) => {
+  try {
+    const businessOwnerId = req.user._id;
+
+    const products = await Product.find({ businessOwnerId });
+
+    res.status(200).json({
+      message: 'Products retrieved successfully',
+      products,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
 
-// Get product details based on user type
-router.get('/products', authenticateToken, async (req, res) => {
+// Get products by status (paid or unpaid)
+router.get('/products/:status', authenticateToken, authorizeRole('businessOwner'), async (req, res) => {
   try {
-    const { email, role } = req.user;
+    const { status } = req.params;
+    const businessOwnerId = req.user._id;
 
-    let products;
+    const products = await Product.find({ businessOwnerId, status });
 
-    if (role === 'businessOwner') {
-      // Business owner can see all products
-      products = await Product.find({});
-    } else if (role === 'client') {
-      // Client can see only products assigned to them
-      const client = await Client.findOne({ email });
-      products = await Product.find({ businessOwnerId: client.businessOwnerId });
-    } else {
-      return res.status(400).json({ message: 'Invalid user role' });
+    res.status(200).json({
+      message: `Products with status ${status} retrieved successfully`,
+      products,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+
+// Get product details
+router.get('/products/:productId', authenticateToken, authorizeRole('businessOwner'), async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const businessOwnerId = req.user._id;
+
+    const product = await Product.findOne({ _id: productId, businessOwnerId });
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
     }
 
     res.status(200).json({
       message: 'Product details retrieved successfully',
-      products,
+      product,
     });
   } catch (error) {
     console.error(error);

@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const uuid = require('uuid');
+const short = require('short-uuid');
 const Product = require('../models/Product');
 const Invoice = require('../models/Invoice');
 const { authenticateToken, authorizeRole } = require('../middleware/authMiddleware');
@@ -17,7 +18,10 @@ router.post('/create-product', authenticateToken, authorizeRole('businessOwner')
     // If no open invoice exists, create a new one
     let newInvoice;
     if (!openInvoice) {
-      const invoiceId = uuid.v4();
+      let  invoiceId= '#';
+      const id = short.generate();;
+        invoiceId += id;
+
       newInvoice = new Invoice({
         clientId,
         businessOwnerId: req.user._id,

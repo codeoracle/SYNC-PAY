@@ -12,12 +12,18 @@ const sendEmail = async ({ to, subject, text }) => {
     },
   });
 
+  const resetUrl = `${process.env.CLIENT_URL}/reset-password/`
+  const message = `You are receiving this email because you (or someone else) has requested the reset of the password. Please click on the following link to complete the process: ${resetUrl}`;
+    
+   
+     
+
   // Define the email options
   const mailOptions = {
     from: process.env.EMAIL_USER, 
     to,
-    subject,
-    text,
+    subject: 'Password Reset Request',
+    text: message,
   };
 
   // Send the email

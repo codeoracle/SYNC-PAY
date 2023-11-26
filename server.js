@@ -9,8 +9,7 @@ const io = require("socket.io")(httpServer, {
   cors: {
     origin: "http://localhost:5173",
     methods: ["GET", "POST"],
-    allowedHeaders: ["my-custom-header"],
-    credentials: true
+
   }
 });
 
@@ -28,24 +27,19 @@ const passwordResetRoutes = require('./routes/passwordResetRoutes');
 dotenv.config();
 const PORT = process.env.PORT || 4000;
 const app = express();
-const server = http.createServer(app);
-// const io = socketIo(server, {
-//     cors: {
-//         origin: "http://localhost:5173/",
-//         methods:["GET", "POST"]
-//     }
-// });
+const httpServer = http.createServer(app);
+const socketIo = io(httpServer, {
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+  }
+});
 
-
-app.use(cors()); // Use the cors middleware
+app.use(cors());
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Internal Server Error' });
-});
 
 
 mongoose.connect(process.env.MONGODB_URI).then(() => {
@@ -54,22 +48,28 @@ mongoose.connect(process.env.MONGODB_URI).then(() => {
   console.error('Error connecting to MongoDB:', err);
 });
 
-io.on('connection', (socket) => {
+// Socket.IO connection handling
+socketIo.on('connection', (socket) => {
   console.log('A user connected');
 
   // Handle events related to invoices
   socket.on('invoicePaid', (invoiceId) => {
-    io.emit('notification', { type: 'invoicePaid', message: `Invoice has been ${invoiceId} paid.` });
+    socketIo.emit('notification', { type: 'invoicePaid', message: `Invoice has been ${invoiceId} paid.` });
   });
 
   socket.on('invoiceUnpaid', (invoiceId) => {
-  io.emit('notification', { type: 'invoiceUnpaid', message: `Invoice ${invoiceId} is unpaid.` });
-});
+    socketIo.emit('notification', { type: 'invoiceUnpaid', message: `Invoice ${invoiceId} is unpaid.` });
+  });
 
   // Disconnect event
   socket.on('disconnect', () => {
     console.log('User disconnected');
   });
+});
+
+app.use((req, res, next) => {
+  req.io = socketIo;
+  next();
 });
 
 app.use((req, res, next) => {

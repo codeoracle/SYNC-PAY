@@ -38,7 +38,7 @@ router.get('/get-invoices', async (req, res) => {
 });
 
 // Make payment for an invoice
-router.post('/make-payment', async (req, res) => {
+router.put('/make-payment', async (req, res) => {
   try {
     const { clientId, invoiceId, amount, email } = req.body;
 
@@ -47,32 +47,40 @@ router.post('/make-payment', async (req, res) => {
       clientId,
       invoiceId,
       amount,
-      reference: '',
+      reference: '', 
     });
 
     const savedPayment = await payment.save();
 
-    const response = await axios.post(
-      'https://api.paystack.co/transaction/initialize',
-      {
-        email: email, 
-        amount: amount * 100, 
+    // Simulate a successful payment status
+    const paymentStatusData = {
+      data: {
+        status: 'paid', // Simulate a successful payment
       },
-      {
-        headers: {
-          Authorization: process.env.PAYSTACK_KEY,
-          'Content-Type': 'application/json',
-        },
+    };
+
+    // Update payment status in the database based on the simulated Paystack response
+    payment.status = paymentStatusData.data.status;
+    await payment.save();
+
+    // If payment is successful, update the associated invoice
+    if (payment.status === 'paid') {
+      const invoice = await Invoice.findOne({ _id: invoiceId });
+      if (invoice) {
+        invoice.isPaid = true;
+        invoice.payments.push(savedPayment._id);
+        await invoice.save();
       }
-    );
 
-    const { data } = response;
+      // Emit a Socket.IO event to notify clients about the payment status
+      req.io.emit('paymentStatus', {
+        clientId: payment.clientId,
+        invoiceId: payment.invoice,
+        status: payment.status,
+      });
+    }
 
-    // Update the reference field in the database with the Paystack reference
-    savedPayment.reference = data.data.reference;
-    await savedPayment.save();
-
-    res.status(200).json(data);
+    res.status(200).json({ message: 'Payment simulated successfully', success: true });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal Server Error' });

@@ -1,7 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const Product = require('../models/Product');
-const Invoice = require('../models/Invoice');
+// const Product = require('../models/Product');
+// const Invoice = require('../models/Invoice');
 const Client = require('../models/Client');
 
 const router = express.Router();

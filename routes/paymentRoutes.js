@@ -9,7 +9,7 @@ const Invoice = require('../models/Invoice');
 const paystackSec = process.env.PAYSTACK_KEY;
 
 router.post('/initialize-payment', async (req, res) => {
- try {
+  try {
     const { clientId, amount, email, invoiceId } = req.body;
 
     // Find the existing invoice in the database
@@ -22,7 +22,7 @@ router.post('/initialize-payment', async (req, res) => {
     // Save payment details to the database
     const payment = new Payment({
       clientId,
-      invoiceId: invoiceId,
+      invoiceId,
       amount,
       email,
       reference: uuid.v4(),
@@ -30,27 +30,20 @@ router.post('/initialize-payment', async (req, res) => {
 
     const savedPayment = await payment.save();
 
-    const response = await axios.post(
-      'https://api.paystack.co/transaction/initialize',
-      {
-        email,
-        amount: amount * 100, // Paystack API expects amount in kobo
+    // Simulate a successful payment status
+    const paymentStatusData = {
+      data: {
+        reference: savedPayment.reference,
+        status: 'success',
       },
-      {
-        headers: {
-          Authorization: `Bearer ${paystackSec}`, 
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    };
 
-    const { data } = response;
-
-    // Update the reference field in the database with the Paystack reference
-    savedPayment.reference = data.data.reference;
+    // Update the reference field in the database with the simulated payment status
+    savedPayment.reference = paymentStatusData.data.reference;
+    savedPayment.status = paymentStatusData.data.status;
     await savedPayment.save();
 
-    res.status(200).json(data);
+    res.status(200).json(paymentStatusData);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal Server Error' });
@@ -71,6 +64,7 @@ router.post('/verify-payment', async (req, res) => {
       }
     );
 
+    
     const { data } = response;
 
     // Update payment status in the database based on the Paystack response

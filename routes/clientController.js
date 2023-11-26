@@ -1,6 +1,7 @@
 // clientController.js
 const express = require('express');
 const axios = require('axios');
+const uuid = require('uuid');
 const Payment = require('../models/Payment');
 const Invoice = require('../models/Invoice');
 const Product = require('../models/Product'); 
@@ -38,18 +39,19 @@ router.get('/get-invoices', async (req, res) => {
 });
 
 // Make payment for an invoice
-router.put('/make-payment', async (req, res) => {
+router.put('/make-payment/:id', async (req, res) => {
   try {
     const { clientId, invoiceId, amount, email } = req.body;
 
     // Save payment details to the database
     const payment = new Payment({
       clientId,
-      invoiceId,
+      invoiceId: invoiceId._id,
       amount,
-      reference: '', 
+      reference: uuid.v4(), 
     });
 
+    
     const savedPayment = await payment.save();
 
     // Simulate a successful payment status

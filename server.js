@@ -5,7 +5,14 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const http = require('http');
-const socketIo = require('socket.io');
+const io = require("socket.io")(httpServer, {
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["my-custom-header"],
+    credentials: true
+  }
+});
 
 const authRoutes = require('./routes/authRoutes');
 const businessOwner = require('./routes/businessOwner');
@@ -22,12 +29,12 @@ dotenv.config();
 const PORT = process.env.PORT || 4000;
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
-    cors: {
-        origin: "http://localhost:5173/",
-        methods:["GET", "POST"]
-    }
-});
+// const io = socketIo(server, {
+//     cors: {
+//         origin: "http://localhost:5173/",
+//         methods:["GET", "POST"]
+//     }
+// });
 
 
 app.use(cors()); // Use the cors middleware

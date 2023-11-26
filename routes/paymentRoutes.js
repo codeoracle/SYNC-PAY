@@ -38,7 +38,7 @@ router.post('/initialize-payment', async (req, res) => {
       },
       {
         headers: {
-          Authorization: paystackSec,
+          Authorization: `Bearer ${paystackSec}`, 
           'Content-Type': 'application/json',
         },
       }

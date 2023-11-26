@@ -1,4 +1,3 @@
-// models/Payment.js
 const mongoose = require('mongoose');
 
 const paymentSchema = new mongoose.Schema({
@@ -10,9 +9,9 @@ const paymentSchema = new mongoose.Schema({
   invoiceId: {
     type: String,
     ref: 'Invoice',
-    required: true,
+    required: false,
+    unique: true,
   },
-
   amount: {
     type: Number,
     required: true,

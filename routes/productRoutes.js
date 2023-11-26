@@ -12,7 +12,7 @@ router.post('/create-product', authenticateToken, authorizeRole('businessOwner')
 
     // Create a new product
     const newProduct = new Product({
-      businessOwnerId: req.user._id, // Use req.user._id directly
+      businessOwnerId: req.user._id, 
       productName,
       price,
     });
@@ -25,7 +25,7 @@ router.post('/create-product', authenticateToken, authorizeRole('businessOwner')
     // Create a new invoice
     const newInvoice = new Invoice({
       clientId,
-      businessOwnerId: req.user._id, // Use req.user._id directly
+      businessOwnerId: req.user._id, 
       invoiceId,
       products: [savedProduct._id],
     });
@@ -55,6 +55,7 @@ router.get('/products', authenticateToken, authorizeRole('businessOwner'), async
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
+
 
 // Get products by status (paid or unpaid)
 router.get('/products/:status', authenticateToken, authorizeRole('businessOwner'), async (req, res) => {

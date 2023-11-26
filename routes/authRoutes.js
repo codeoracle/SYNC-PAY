@@ -24,7 +24,14 @@ router.post('/register', async (req, res) => {
     const newUser = new User({ businessName, email, password: hashedPassword, role: 'businessOwner' });
     const savedUser = await newUser.save();
 
-    res.status(201).json({ user: savedUser, success: true });
+    // Generate JWT token
+    const token = jwt.sign(
+      { email: savedUser.email, role: savedUser.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '3d' }
+    );
+
+    res.status(201).json({ user: savedUser, token, success: true });
 
   } catch (error) {
     console.error(error);

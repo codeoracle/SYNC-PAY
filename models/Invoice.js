@@ -4,7 +4,7 @@ const invoiceSchema = new mongoose.Schema({
   
   clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Client', required: true },
   productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: false },
-  amount: { type: Number, required: false },
+  amount: { type: Number, required: true },
   isPaid: { type: Boolean, default: false },
   createdAt: {
     type: Date,

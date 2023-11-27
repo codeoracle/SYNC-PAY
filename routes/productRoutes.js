@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const uuid = require('uuid');
 const short = require('short-uuid');
+const jwt = require('jsonwebtoken');
 const Product = require('../models/Product');
 const Invoice = require('../models/Invoice');
 const { authenticateToken, authorizeRole } = require('../middleware/authMiddleware');
@@ -66,11 +67,9 @@ router.post('/create-product', authenticateToken, authorizeRole('businessOwner')
 });
 
 // Get all products
-router.get('/products', authenticateToken, authorizeRole('businessOwner'), async (req, res) => {
-  try {
-    const businessOwnerId = req.user._id;
-
-    const products = await Product.find({ businessOwnerId });
+router.get('/products', authenticateToken, async (req, res) => {
+    try {
+    const products = await Product.find();
 
     res.status(200).json({
       message: 'Products retrieved successfully',
@@ -83,7 +82,7 @@ router.get('/products', authenticateToken, authorizeRole('businessOwner'), async
 });
 
 // Get products by status (paid or unpaid)
-router.get('/products/:status', authenticateToken, authorizeRole('businessOwner'), async (req, res) => {
+router.get('/products/:status', authenticateToken, async (req, res) => {
   try {
     const { status } = req.params;
     const businessOwnerId = req.user._id;
@@ -102,7 +101,7 @@ router.get('/products/:status', authenticateToken, authorizeRole('businessOwner'
 
 
 // Get product details
-router.get('/product/:productId', authenticateToken, authorizeRole('businessOwner'), async (req, res) => {
+router.get('/product/:productId', authenticateToken, async (req, res) => {
   try {
     const { productId } = req.params;
     const businessOwnerId = req.user._id;

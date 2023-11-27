@@ -28,7 +28,7 @@ const forgotPassword = async (req, res) => {
     const resetToken = new PasswordResetToken({
       userId: user._id,
       token,
-      expires: Date.now() + 3600000, // Token expires in 1 hour
+      expires: Date.now() + 3600000, 
     });
 
     await resetToken.save();

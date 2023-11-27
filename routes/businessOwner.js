@@ -3,11 +3,12 @@ const jwt = require('jsonwebtoken');
 // const Product = require('../models/Product');
 // const Invoice = require('../models/Invoice');
 const Client = require('../models/Client');
+const { authenticateToken, authorizeRole } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
 // Create a new client
-router.post('/create-client', async (req, res) => {
+router.post('/create-client', authenticateToken, authorizeRole('businessOwner'), async (req, res) => {
   try {
     const { businessOwnerId, firstName, lastName, email, phoneNumber, country, address } = req.body;
 
@@ -37,7 +38,7 @@ router.post('/create-client', async (req, res) => {
 });
 
 // Client login
-router.post('/client-login', async (req, res) => {
+router.post('/client-login', authenticateToken, async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -60,6 +61,7 @@ router.post('/client-login', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error', success: false });
   }
 });
+
 
 // Create a new product and generate an invoice
 // router.post('/create-product', async (req, res) => {

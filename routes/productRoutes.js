@@ -9,33 +9,36 @@ const { authenticateToken, authorizeRole } = require('../middleware/authMiddlewa
 
 // Create a new product
 router.post('/create-product', authenticateToken, authorizeRole('businessOwner'), async (req, res) => {
- try {
-    const { productName, price, clientId } = req.body;
+  try {
+    const { productName, price } = req.body;
 
-    // Find an existing open invoice for the client
-    const openInvoice = await Invoice.findOne({ clientId, isPaid: false });
-
-    // If no open invoice exists, create a new one
+    // Find or create an open invoice for all clients under the business owner
     let newInvoice;
+    const businessOwnerId = req.user._id;
+    const openInvoice = await Invoice.findOne({ businessOwnerId, isPaid: false });
+
     if (!openInvoice) {
-      let  invoiceId= '#';
-      const id = short.generate();;
-        invoiceId += id;
+      let invoiceId = '#';
+      const id = short.generate();
+      invoiceId += id;
 
       newInvoice = new Invoice({
-        clientId,
-        businessOwnerId: req.user._id,
+        businessOwnerId,
         invoiceId,
         amount: price,
         products: [], // Initialize products as an empty array
       });
+
+
+      // Save the new invoice
+      await newInvoice.save();
     } else {
       newInvoice = openInvoice;
     }
 
     // Create a new product
     const newProduct = new Product({
-      businessOwnerId: req.user._id,
+      businessOwnerId,
       productName,
       price,
     });
@@ -46,12 +49,11 @@ router.post('/create-product', authenticateToken, authorizeRole('businessOwner')
     newInvoice.products.push(savedProduct._id);
 
     // Save the updated invoice
-    const savedInvoice = await newInvoice.save();
+    await newInvoice.save();
 
     res.status(201).json({
-      message: 'Product and invoice updated successfully',
+      message: 'Product and invoice created successfully',
       product: savedProduct,
-      invoice: savedInvoice,
       success: true,
     });
   } catch (error) {

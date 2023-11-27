@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 
 const invoiceSchema = new mongoose.Schema({
   invoiceId: { type: String, unique: true },
-  clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Client', required: true },
+  clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Client', required: false },
   products: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }], // Define products as an array
   amount: { type: Number, required: true },
   isPaid: { type: Boolean, default: false },

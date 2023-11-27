@@ -13,11 +13,14 @@ router.post('/create-product', authenticateToken, authorizeRole('businessOwner')
     const { productName, price } = req.body;
 
     // Find or create an open invoice for all clients under the business owner
-    let newInvoice;
     const businessOwnerId = req.user._id;
-    const openInvoice = await Invoice.findOne({ businessOwnerId, isPaid: false });
+    let newInvoice;
+
+    // Find the latest unpaid invoice for the business owner
+    const openInvoice = await Invoice.findOne({ businessOwnerId, isPaid: false }).sort({ createdAt: -1 });
 
     if (!openInvoice) {
+      // If no open invoice exists, create a new one
       let invoiceId = '#';
       const id = short.generate();
       invoiceId += id;
@@ -28,7 +31,6 @@ router.post('/create-product', authenticateToken, authorizeRole('businessOwner')
         amount: price,
         products: [], // Initialize products as an empty array
       });
-
 
       // Save the new invoice
       await newInvoice.save();
@@ -54,6 +56,7 @@ router.post('/create-product', authenticateToken, authorizeRole('businessOwner')
     res.status(201).json({
       message: 'Product and invoice created successfully',
       product: savedProduct,
+      Invoice: newInvoice,
       success: true,
     });
   } catch (error) {

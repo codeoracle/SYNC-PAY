@@ -67,6 +67,8 @@ router.post('/client-login', async (req, res) => {
       { expiresIn: '3d' }
     );
 
+
+    
     res.status(200).json({ client, token, success: true });
   } catch (error) {
     console.error(error);

@@ -76,6 +76,10 @@ router.post('/client-login', async (req, res) => {
         firstName: client.firstName,
         lastName: client.lastName,
         email: client.email,
+        role: client.role,
+        phoneNumber: client.phoneNumber,
+        country: client.country,
+        password: client.password,
         businessOwner: {
           _id: businessOwner._id,
           name: businessOwner.businessName, // Adjust the property accordingly

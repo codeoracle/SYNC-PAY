@@ -38,7 +38,7 @@ router.post('/create-client', authenticateToken, authorizeRole('businessOwner'),
 });
 
 // Client login
-router.post('/client-login', authenticateToken, async (req, res) => {
+router.post('/client-login', async (req, res) => {
   try {
     const { email } = req.body;
 

@@ -20,11 +20,16 @@ router.get('/dashboard', authenticateToken, authorizeRole('businessOwner'), asyn
 
     const totalInvoices = await Invoice.countDocuments({ businessOwnerId });
 
+    const paidInvoices = await Invoice.countDocuments({ businessOwnerId, isPaid: true });
+    const unpaidInvoices = await Invoice.countDocuments({ businessOwnerId, isPaid: false });
+
     // Return the dashboard information
     res.status(200).json({
       totalAmount: totalAmount.length > 0 ? totalAmount[0].total : 0,
       numberOfClients,
       totalInvoices,
+      paidInvoices,
+      unpaidInvoices,
     });
   } catch (error) {
     console.error(error);

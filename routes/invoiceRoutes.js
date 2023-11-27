@@ -2,11 +2,16 @@ const express = require('express');
 const router = express.Router();
 const uuid = require('uuid');
 const Invoice = require('../models/Invoice');
+const { authenticateToken, authorizeRole } = require('../middleware/authMiddleware');
 
-// Get all invoices
-router.get('/invoices', async (req, res) => {
+
+// Get all invoices with product details
+router.get('/invoices', authenticateToken, authorizeRole('businessOwner'), async (req, res) => {
   try {
-    const invoices = await Invoice.find().populate('clientId');
+    const invoices = await Invoice.find().populate({
+      path: 'products',
+      select: 'productName price', // Select the fields you want to retrieve
+    });
 
     res.status(200).json({
       message: 'Invoices retrieved successfully',
@@ -18,8 +23,32 @@ router.get('/invoices', async (req, res) => {
   }
 });
 
+// Get a single invoice by ID with product details
+router.get('/invoices/:invoiceId', authenticateToken, authorizeRole('businessOwner'), async (req, res) => {
+  try {
+    const { invoiceId } = req.params;
+
+    const invoice = await Invoice.findById(invoiceId).populate({
+      path: 'products',
+      select: 'productName price', // Select the fields you want to retrieve
+    });
+
+    if (!invoice) {
+      return res.status(404).json({ message: 'Invoice not found', success: false });
+    }
+
+    res.status(200).json({
+      message: 'Invoice retrieved successfully',
+      invoice,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error', success: false });
+  }
+});
+
 // Update invoice status from unpaid to paid
-router.put('/invoices/:invoiceId/mark-paid', async (req, res) => {
+router.put('/invoices/:invoiceId/mark-paid', authenticateToken, authorizeRole('businessOwner'), async (req, res) => {
   try {
     const { invoiceId } = req.params;
 
@@ -53,6 +82,5 @@ router.put('/invoices/:invoiceId/mark-paid', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error', success: false });
   }
 });
-
 
 module.exports = router;

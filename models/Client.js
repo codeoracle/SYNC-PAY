@@ -29,7 +29,7 @@ const clientSchema = new mongoose.Schema({
   },
   address: {
     type: String,
-    required: true,
+    required: false,
   },
   password: {
     type: String,

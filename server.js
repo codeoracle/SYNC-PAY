@@ -16,7 +16,7 @@ const invoiceRoutes = require('./routes/invoiceRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const productRoutes = require('./routes/productRoutes');
-const passwordResetRoutes = require('./routes/passwordResetRoutes');
+// const passwordResetRoutes = require('./routes/passwordResetRoutes');
 
 dotenv.config();
 const PORT = process.env.PORT || 4000;
@@ -27,6 +27,7 @@ const io = socketIo(server, {
     origin: "http://localhost:5173",
     methods: ["GET", "POST"],
   },
+
 });
 
 app.use(cors()); // Use the cors middleware
@@ -78,7 +79,7 @@ app.use('/api', invoiceRoutes);
 app.use('/api/notifications', notificationRoutes); 
 app.use('/payments', paymentRoutes);
 app.use('/api', productRoutes);
-app.use('/auth', passwordResetRoutes);
+// app.use('/auth', passwordResetRoutes);
 
 
 server.listen(PORT, () => {

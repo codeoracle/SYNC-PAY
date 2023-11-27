@@ -19,7 +19,7 @@ router.post('/initialize-payment', async (req, res) => {
       return res.status(404).json({ message: 'Invoice not found' });
     }
 
-
+  
     // Save payment details to the database
     const payment = new Payment({
       clientId,

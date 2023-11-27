@@ -1,9 +1,72 @@
 const express = require('express');
-const router = express.Router();
-const uuid = require('uuid');
+const short = require('short-uuid');
+const Product = require('../models/Product');
 const Invoice = require('../models/Invoice');
+const Payment = require('../models/Payment');
 const { authenticateToken, authorizeRole } = require('../middleware/authMiddleware');
 
+const router = express.Router();
+
+// Generate invoice for a specific product and update product status
+router.put('/generate-invoice/:productId', authenticateToken, async (req, res) => {
+  try {
+    const { clientId, amount } = req.body;
+    const { productId } = req.params;
+
+    // Find the product
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found', success: false });
+    }
+
+    // Create a new invoice
+    let invoiceId = '#';
+    const id = short.generate();
+    invoiceId += id;
+
+    // Create a new invoice for the product
+    const newInvoice = new Invoice({
+      clientId,
+      invoiceId,
+      businessOwnerId: product.businessOwnerId,
+      amount,
+      products: [productId],
+    });
+
+    const savedInvoice = await newInvoice.save();
+
+    // Update the product status to paid
+    product.status = 'paid';
+    await product.save();
+
+    // Save payment details to the database
+    const payment = new Payment({
+      clientId,
+      invoiceId: savedInvoice._id,
+      amount,
+      reference: short.generate(),
+    });
+
+    const savedPayment = await payment.save();
+
+    // Emit a Socket.IO event to notify clients about the payment status
+    req.io.emit('paymentStatus', {
+      clientId: payment.clientId,
+      invoiceId: payment.invoiceId,
+      status: 'paid',
+    });
+
+    res.status(200).json({
+      message: 'Payment and invoice created successfully',
+      success: true,
+      payment: savedPayment,
+      invoice: savedInvoice,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error', success: false });
+  }
+});
 
 // Get all invoices with product details
 router.get('/invoices', authenticateToken, authorizeRole('businessOwner'), async (req, res) => {

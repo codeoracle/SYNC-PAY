@@ -12,24 +12,22 @@ router.get('/dashboard', authenticateToken, authorizeRole('businessOwner'), asyn
 
     // Fetch necessary data for the dashboard
     const totalAmount = await Invoice.aggregate([
-      { $match: { businessOwnerId } },
+      { $match: { invoiceId: { $exists: true }, clientId: { $in: await Client.find({ businessOwnerId }) } } },
       { $group: { _id: null, total: { $sum: '$amount' } } },
     ]);
 
     const numberOfClients = await Client.countDocuments({ businessOwnerId });
 
-    const totalInvoices = await Invoice.countDocuments({ businessOwnerId });
-
-    const paidInvoices = await Invoice.countDocuments({ businessOwnerId, isPaid: true });
-    const unpaidInvoices = await Invoice.countDocuments({ businessOwnerId, isPaid: false });
+    const totalInvoices = await Invoice.countDocuments({
+      invoiceId: { $exists: true },
+      // clientId: { $in: await Client.find({ businessOwnerId }) },
+    });
 
     // Return the dashboard information
     res.status(200).json({
       totalAmount: totalAmount.length > 0 ? totalAmount[0].total : 0,
       numberOfClients,
       totalInvoices,
-      paidInvoices,
-      unpaidInvoices,
     });
   } catch (error) {
     console.error(error);

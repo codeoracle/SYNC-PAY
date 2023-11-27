@@ -1,7 +1,9 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-// const Product = require('../models/Product');
-// const Invoice = require('../models/Invoice');
+const bcrypt = require('bcrypt');
+const uuid = require('uuid');
+const Product = require('../models/Product');
+const Invoice = require('../models/Invoice');
 const Client = require('../models/Client');
 const { authenticateToken, authorizeRole } = require('../middleware/authMiddleware');
 
@@ -10,13 +12,16 @@ const router = express.Router();
 // Create a new client
 router.post('/create-client', authenticateToken, authorizeRole('businessOwner'), async (req, res) => {
   try {
-    const { businessOwnerId, firstName, lastName, email, phoneNumber, country, address } = req.body;
+    const { businessOwnerId, firstName, lastName, email, phoneNumber, country, address, password } = req.body;
 
     // Check if the client already exists
     const existingClient = await Client.findOne({ email, businessOwnerId });
     if (existingClient) {
       return res.status(409).json({ error: 'Client already exists', success: false });
     }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const newClient = new Client({
       businessOwnerId,
@@ -26,6 +31,7 @@ router.post('/create-client', authenticateToken, authorizeRole('businessOwner'),
       phoneNumber,
       country,
       address,
+      password: hashedPassword,
     });
 
     const savedClient = await newClient.save();
@@ -40,11 +46,17 @@ router.post('/create-client', authenticateToken, authorizeRole('businessOwner'),
 // Client login
 router.post('/client-login', async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, password } = req.body;
 
     // Check if client exists
     const client = await Client.findOne({ email });
     if (!client) {
+      return res.status(401).json({ error: 'Invalid credentials', success: false });
+    }
+
+    // Verify the password
+    const passwordMatch = await bcrypt.compare(password, client.password);
+    if (!passwordMatch) {
       return res.status(401).json({ error: 'Invalid credentials', success: false });
     }
 
@@ -62,9 +74,8 @@ router.post('/client-login', async (req, res) => {
   }
 });
 
-
 // Create a new product and generate an invoice
-// router.post('/create-product', async (req, res) => {
+// router.post('/create-product', authenticateToken, authorizeRole('businessOwner'), async (req, res) => {
 //   try {
 //     const { businessOwnerId, productName, price, clientId } = req.body;
 

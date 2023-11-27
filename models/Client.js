@@ -33,7 +33,7 @@ const clientSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: false,
+    required: true,
   },
   role: {
     type: String,
